@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>FIFO & LIFO Rechner</title>
+<style>
+  body { font-family: Arial; max-width: 700px; margin: auto; }
+  input { margin: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  td, th { border: 1px solid #999; padding: 6px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h2>FIFO / LIFO Bestandsrechner</h2>
+
+<label>Datum: <input type="date" id="date"></label>
+<label>Menge: <input type="number" id="qty"></label>
+<label>Preis pro Einheit (€): <input type="number" id="price" step="0.01"></label>
+<button onclick="addEntry()">Zugang hinzufügen</button>
+
+<table id="table">
+  <tr>
+    <th>Datum</th>
+    <th>Menge</th>
+    <th>Preis</th>
+  </tr>
+</table>
+
+<h3>Zu berechnende Bestandsmenge:</h3>
+<input type="number" id="targetQty">
+<button onclick="calcFIFO()">FIFO berechnen</button>
+<button onclick="calcLIFO()">LIFO berechnen</button>
+
+<h3>Ergebnis:</h3>
+<div id="result" style="font-size:18px; font-weight:bold;"></div>
+
+<script>
+let entries = [];
+
+function addEntry() {
+  const date = document.getElementById('date').value;
+  const qty = Number(document.getElementById('qty').value);
+  const price = Number(document.getElementById('price').value);
+
+  if (!date || !qty || !price) {
+    alert("Bitte alle Felder ausfüllen!");
+    return;
+  }
+
+  entries.push({ date, qty, price });
+
+  const table = document.getElementById('table');
+  const row = table.insertRow();
+  row.insertCell().textContent = date;
+  row.insertCell().textContent = qty;
+  row.insertCell().textContent = price + " €";
+}
+
+function calcFIFO() {
+  const target = Number(document.getElementById('targetQty').value);
+  if (!target) { alert("Bitte Bestandsmenge eingeben"); return; }
+
+  const sorted = [...entries].sort((a,b) => new Date(a.date) - new Date(b.date));
+  document.getElementById('result').textContent = 
+    "Wert (FIFO): " + calculate(sorted, target) + " €";
+}
+
+function calcLIFO() {
+  const target = Number(document.getElementById('targetQty').value);
+  if (!target) { alert("Bitte Bestandsmenge eingeben"); return; }
+
+  const sorted = [...entries].sort((a,b) => new Date(b.date) - new Date(a.date));
+  document.getElementById('result').textContent = 
+    "Wert (LIFO): " + calculate(sorted, target) + " €";
+}
+
+function calculate(list, target) {
+  let remaining = target;
+  let value = 0;
+
+  for (let entry of list) {
+    if (remaining <= 0) break;
+    const usedQty = Math.min(remaining, entry.qty);
+    value += usedQty * entry.price;
+    remaining -= usedQty;
+  }
+
+  return value.toFixed(2);
+}
+</script>
+
+</body>
+</html>
